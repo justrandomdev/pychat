@@ -1,0 +1,17 @@
+ # Exclude .env files
+    .env
+
+    # Common Python exclusions
+    __pycache__/
+    *.py[cod]
+    *$py.class
+    *.so
+    *.egg-info/
+    dist/
+    build/
+    .eggs/
+    .pytest_cache/
+
+    # IDE exclusions
+    .idea/
+    .vscode/
