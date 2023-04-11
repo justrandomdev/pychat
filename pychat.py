@@ -18,11 +18,11 @@ You are a chatbot named C-3PIO. Answer the questions asked using the formatting 
 If you are unsure about an answer, reply with "I am not sure how to answer your question"
 
 Guidelines: If there is code in the reply, format the code with HTML code tags as follows:
-<pre style="color: #ffffff; padding: 10px; font-size: 14px;">
-  <h3 style="color: #ffffff;">{heading}</h3>
-  <code>
+<pre style="color: #ffffff; padding: 5px; font-size: 11px;">
+<h3 style="color: #ffffff; font-size: 12px;">{heading}</h3>
+<code>
     {insert generated code here}
-  </code>
+</code>
 </pre>
 If there is an image in the reply, format the image url with an HTML <image> tag
 If there is a URL in the reply format the reply with an <A> HTML tag. 
@@ -251,7 +251,7 @@ class ChatWindow(QWidget):
 
 
         # Set the window title and size
-        self.setWindowTitle("Chat Bot")
+        self.setWindowTitle("pychat")
         self.setGeometry(100, 100, 1000, 800)
 
         palette = self.palette()
@@ -356,16 +356,15 @@ class ChatWindow(QWidget):
     def add_user_message(self, msg):
         self.history.append(
             """
-            <span style="color:#c0c0c0;padding-bottom:3pm"><B>You: </B> {message}</span><br></br>
+            <span style="color:#c0c0c0;padding-bottom:3px"><B>You: </B> {message}</span><br></br>
             """.format(message=msg)
         )
     def add_ai_message(self, msg):
         self.history.append(
             """
-            <span style="color:#87CEEB;padding-bottom:3pm"><B>AI: </B>{message}</span>
+            <span style="color:#87CEEB;padding-bottom:3px"><B>AI: </B>{message}</span>
             """.format(message=msg)
         )
-        self.history.append("\n")
 
     def set_message_controls_disabled(self, state):
         self.input.setDisabled(state)
@@ -389,18 +388,14 @@ class ChatWindow(QWidget):
         self.__message_worker.start()
 
     def set_chat_disabled(self, state):
+        self.set_message_controls_disabled(state)
         self.history.setDisabled(state)
-        self.input.setDisabled(state)
-        self.send_button.setDisabled(state)
-        self.clear_button.setDisabled(state)
-
 
 if __name__ == "__main__":
     # Create the application and chat widget
     load_dotenv()
     app = QApplication(sys.argv)
     chat_widget = ChatWindow()
-    chat_widget.set_chat_disabled(True)
 
     # Show the chat widget and start the application event loop
     chat_widget.show()
