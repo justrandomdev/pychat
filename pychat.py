@@ -6,11 +6,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTe
     QLineEdit, QPushButton, QListWidget, QSizePolicy, QDialog, QLabel, QMessageBox
 from PyQt5.QtGui import QPalette
 
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain.llms import OpenAI
 from dotenv import load_dotenv
-from langchain import PromptTemplate
+from ai import OpenAIChat, OpenAISitemapWebSearch
 
 
 prompt_template = """
@@ -49,55 +46,6 @@ class SessionListChangedEvent(QEvent):
         self.change_type = change_type
         self.name = name
 
-
-class OpenAIChat:
-    def __init__(self, model_name: str, api_key, temp=0.7, conversation_buffer_token_limit=1000):
-        self.__model_name = model_name
-        self.__temperature = temp
-        self.__api_key = api_key
-        self.__conversation_buffer_token_limit = conversation_buffer_token_limit
-
-        self.__llm_factory()
-
-    def __llm_factory(self):
-        self.__llm = OpenAI(temperature=self.__temperature,
-                            openai_api_key=self.__api_key,
-                            model_name=self.__model_name)
-
-        self.__conversation_buffer = ConversationSummaryBufferMemory(
-            llm=self.__llm,
-            max_token_limit=self.__conversation_buffer_token_limit
-        )
-        self.__conversation_chain = ConversationChain(
-            llm=self.__llm,
-            memory=self.__conversation_buffer
-        )
-
-    @property
-    def temperature(self)->float:
-        return self.__temperature
-
-    @temperature.setter
-    def temperature(self, value):
-        self.__temperature = value
-        self.__llm_factory()
-
-    @property
-    def model_name(self)->str:
-        return self.__model_name
-
-    @model_name.setter
-    def model_name(self, value):
-        self.__model_name = value
-        self.__llm_factory()
-
-    @property
-    def conversation_buffer(self)->ConversationSummaryBufferMemory:
-        return self.__conversation_buffer
-
-    @property
-    def conversation_chain(self)->ConversationChain:
-        return self.__conversation_chain
 
 class SessionlistWidget(QWidget):
     def __init__(self, chat_widget, session_item_changed_handler):
@@ -235,7 +183,7 @@ class ChatWorker(QThread):
         self.__message = message
 
     def run(self):
-        response = self.__session.conversation_chain.run(self.__message)
+        response = self.__session.query(self.__message)
         self.finished.emit(response)
 
 class ChatWindow(QWidget):
@@ -337,7 +285,20 @@ class ChatWindow(QWidget):
             api_key = os.getenv('OPENAI_KEY')
             container = SessionContainer()
             container.key = name
-            container.ai_engine = OpenAIChat("gpt-3.5-turbo", api_key, temp=0.5)
+            # container.ai_engine = OpenAIChat("gpt-3.5-turbo", api_key, temp=0.5)
+            container.ai_engine = OpenAISitemapWebSearch(
+                model_name="gpt-3.5-turbo",
+                api_key=api_key,
+                # url="https://python.langchain.com/en/latest/index.html",
+                url="https://medium.com/slope-stories/slopegpt-the-first-payments-risk-model-powered-by-gpt-4-cd444ab5242d",
+                db_path="./vector_db",
+                collection_name="medium-slopegpt",
+                filter_urls=["https://python.langchain.com/en/latest/"],
+                temp=0.5,
+                load_docs_from_source=True,
+                max_pages=1
+            )
+
             container.history = ""
             self.__sessions[name] = container
             self.checklist.select_session(self.checklist.sessionList.count() - 1)
@@ -392,11 +353,14 @@ class ChatWindow(QWidget):
         self.history.setDisabled(state)
 
 if __name__ == "__main__":
-    # Create the application and chat widget
-    load_dotenv()
-    app = QApplication(sys.argv)
-    chat_widget = ChatWindow()
+    try:
+        # Create the application and chat widget
+        load_dotenv()
+        app = QApplication(sys.argv)
+        chat_widget = ChatWindow()
 
-    # Show the chat widget and start the application event loop
-    chat_widget.show()
-    sys.exit(app.exec_())
+        # Show the chat widget and start the application event loop
+        chat_widget.show()
+        sys.exit(app.exec_())
+    except Exception as error:
+        print(error)

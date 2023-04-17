@@ -15,3 +15,6 @@
     # IDE exclusions
     .idea/
     .vscode/
+
+    #DB exclusions
+    qdrant/
